@@ -1,0 +1,59 @@
+require File.expand_path('../../../config/environment', __FILE__)
+
+Dir["#{Rails.root}/lib/sales_force/*"].each {|file| require file }
+include SalesForce
+
+config = {
+    'development' => {'base_path' => "/Volumes/data/sf-2016-05-14", 'limit' => 10},
+    'test' => {'base_path' => "/Volumes/data/sf-2016-05-14", 'limit' => 1},
+    'production' => {'base_path' => "/home/feuser/legacy_data"}
+}
+
+# Import documents for insurance policy records
+
+base_path = config[Rails.env]['base_path']
+source = {:records_table => 'InsuranceDoc__c', :documents_table => 'Attachment'}
+limit = config[Rails.env]['limit']
+
+started_at = Time.now
+
+search = DocumentSearch.new(base_path, source, :limit => limit)
+search_started_at = Time.now
+
+p "DocumentSearch started at: #{search_started_at}"
+
+search.run
+
+search_ended_at = Time.now
+p "DocumentSearch ended at: #{search_ended_at}"
+
+search_time = search_ended_at - search_started_at
+
+p "DocumentSearch time: #{search_time}"
+
+if ((count = search.results.size) == 0)
+  p "Found 0 records with documents"
+else
+  p "Found #{count} records with documents"
+
+  import = InsuranceDocumentImport.new(search.results)
+
+  before_count = Document.count
+  import_started_at = Time.now
+  p "DocumentImport started at: #{import_started_at}"
+
+  import.run
+
+  import_ended_at = Time.now
+  p "DocumentImport ended at: #{import_ended_at}"
+  after_count = Document.count
+  p "Imported #{after_count - before_count} documents"
+  import_time = import_ended_at - import_started_at
+  p "DocumentImport time: #{import_time}"
+end
+
+ended_at = Time.now
+total_time = ended_at - started_at
+p "Total runtime: #{total_time} sec"
+
+p "Done"
