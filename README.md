@@ -1,7 +1,7 @@
 sf attached
 ==========
 
-classes useful for extracting salesforce attachments and attachables (i.e., owneers of attachments) from salesforce export archives.
+classes useful for extracting salesforce attachments and attachables (i.e., owners of attachments) from salesforce export archives.
 
 TODO
 ====
